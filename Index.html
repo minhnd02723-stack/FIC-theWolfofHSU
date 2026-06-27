@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIC Live · Danh mục 500 triệu</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+  :root{color-scheme:dark;
+    --bg:#0b0f17;--card:#141b29;--card2:#1b2436;--line:#27324a;--txt:#e7edf7;
+    --muted:#8a98b3;--up:#22c55e;--down:#f43f5e;--flat:#9aa7c2;--accent:#4f8cff;--gold:#f5b301}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:linear-gradient(180deg,#0b0f17,#0e1420);color:var(--txt);
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;line-height:1.5;padding:20px;min-height:100vh}
+  .wrap{max-width:1180px;margin:0 auto}
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  h1{font-size:21px;font-weight:800}h1 span{color:var(--accent)}
+  .macro{color:var(--muted);font-size:12.5px;margin-top:2px}
+  .nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .nav button,.btn{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:8px;
+    padding:7px 13px;cursor:pointer;font-size:13px;font-weight:600}
+  .nav button.active{background:var(--accent);border-color:var(--accent)}
+  .nav button:hover,.btn:hover{border-color:var(--accent)}
+  .status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--flat)}
+  .dot.live{background:var(--up);animation:pulse 1.6s infinite}.dot.seed{background:var(--gold)}
+  @keyframes pulse{0%{opacity:1}50%{opacity:.35}100%{opacity:1}}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:13px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .kpi .lab{color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .kpi .val{font-size:23px;font-weight:800;margin-top:5px}.kpi .sub{font-size:12.5px;margin-top:3px;font-weight:600}
+  .up{color:var(--up)}.down{color:var(--down)}.flat{color:var(--flat)}.gold{color:var(--gold)}
+  .ips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:13px}
+  .chip{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:7px 11px;font-size:12px;display:flex;gap:7px;align-items:center}
+  .badge{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:20px}
+  .b-ok{background:rgba(34,197,94,.15);color:var(--up)}.b-warn{background:rgba(245,179,1,.16);color:var(--gold)}.b-bad{background:rgba(244,63,94,.16);color:var(--down)}
+  .grid2{display:grid;grid-template-columns:300px 1fr;gap:13px;margin-bottom:13px}
+  .grid{display:grid;grid-template-columns:1.6fr 1fr;gap:13px;margin-bottom:13px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+  .card h2{font-size:13px;font-weight:700;margin-bottom:12px;color:#cfd9ee}
+  .cbox{position:relative;width:100%}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:10px 9px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+  th:first-child,td:first-child{text-align:left}
+  tbody tr.clk{cursor:pointer}tbody tr.clk:hover{background:var(--card2)}
+  .sym{font-weight:800;font-size:13.5px}.nm{color:var(--muted);font-size:11px}
+  .arrow{color:var(--accent);font-weight:700;font-size:12px}
+  .pill{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px}
+  .p-hold{background:rgba(79,140,255,.15);color:var(--accent)}.p-stop{background:rgba(244,63,94,.18);color:var(--down)}
+  .p-near{background:rgba(245,179,1,.16);color:var(--gold)}.p-tp{background:rgba(34,197,94,.16);color:var(--up)}
+  .kv{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+  .kv:last-child{border:0}.kv .k{color:var(--muted)}.kv .v{font-weight:700}
+  .bar{position:relative;height:10px;border-radius:6px;background:linear-gradient(90deg,var(--down),var(--gold) 50%,var(--up));margin:26px 0 8px}
+  .mk{position:absolute;top:-7px;width:3px;height:24px;background:#fff;border-radius:2px;box-shadow:0 0 6px rgba(255,255,255,.7)}
+  .mk b{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:11px;white-space:nowrap;color:#fff}
+  .ends{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
+  .thesis p{font-size:13.5px;margin-bottom:11px}
+  .thesis .lab{color:var(--accent);font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px}
+  .banner{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:var(--up);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;margin-bottom:14px}
+  .sector{display:inline-block;background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:2px 11px;font-size:11.5px;color:#cfd9ee}
+  .hide{display:none!important}
+  ul{margin:2px 0 0 18px;font-size:13px}li{margin-bottom:6px}
+  .note{color:var(--muted);font-size:12px;margin-top:14px;line-height:1.7}
+  .searchcard{margin-bottom:13px}.searchcard h2{margin-bottom:10px}
+  #vnsearch{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:11px 14px;font-size:14px}
+  #vnsearch:focus{outline:none;border-color:var(--accent)}
+  .suggest{margin-top:6px}
+  .sug{padding:9px 12px;border:1px solid var(--line);border-top:none;cursor:pointer;font-size:13.5px;display:flex;gap:8px;align-items:center}
+  .sug:first-child{border-top:1px solid var(--line);border-radius:8px 8px 0 0}.sug:last-child{border-radius:0 0 8px 8px}
+  .sug:hover{background:var(--card2)}.sug b{color:var(--accent);min-width:46px}.sug span{flex:1}.sug i{color:var(--muted);font-size:11.5px;font-style:normal}.sug em{color:var(--gold);font-size:11px;font-style:normal}.sug.mut{color:var(--muted);cursor:default}
+  .addform{margin-top:12px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:13px 15px}
+  .afrow{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+  .afrow label{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+  .afrow input{background:var(--card);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:9px 11px;font-size:14px;width:150px}
+  .afrow input:focus{outline:none;border-color:var(--accent)}.afsym{font-weight:800;font-size:15px;padding:8px 0}
+  .btn-add{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:11px 16px;font-weight:700;font-size:13.5px;cursor:pointer}.btn-add:hover{filter:brightness(1.1)}
+  .rm{color:var(--down);font-weight:800;cursor:pointer;margin-right:6px;padding:0 5px;border-radius:4px}.rm:hover{background:rgba(244,63,94,.15)}
+  @media(max-width:880px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2,.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>FIC <span>Live</span> · Danh mục 500 triệu</h1>
+      <div class="macro" id="macro"></div>
+    </div>
+    <div style="text-align:right">
+      <div class="nav">
+        <button id="nav-dash" class="active" onclick="showDash()">📊 Danh mục</button>
+        <button id="nav-risk" onclick="showRisk()">📉 Rủi ro</button>
+        <button id="nav-news" onclick="showNews()">📰 Tin tức</button>
+        <button id="nav-chot" onclick="showChot()">📅 Ngày chốt 9/6</button>
+      </div>
+      <div class="status" style="margin-top:8px;justify-content:flex-end"><span class="dot" id="dot"></span><span id="stat">Đang tải…</span></div>
+    </div>
+  </header>
+
+  <!-- ===== VIEW: DASHBOARD ===== -->
+  <section id="view-dash">
+    <div class="kpis">
+      <div class="kpi"><div class="lab">NAV hiện tại</div><div class="val" id="nav">—</div><div class="sub flat">vốn gốc 500.000.000đ</div></div>
+      <div class="kpi"><div class="lab">Tổng lãi/lỗ</div><div class="val" id="pnl">—</div><div class="sub" id="pnlPct">—</div></div>
+      <div class="kpi"><div class="lab">Lãi/lỗ hôm nay</div><div class="val" id="day">—</div><div class="sub" id="dayPct">—</div></div>
+      <div class="kpi"><div class="lab">Tiền mặt</div><div class="val" id="cash">—</div><div class="sub flat" id="cashPct">mục tiêu 30%</div></div>
+    </div>
+    <div class="card searchcard">
+      <h2>🔎 Tìm &amp; thêm mã VN100 vào danh mục</h2>
+      <input id="vnsearch" placeholder="Gõ mã hoặc tên công ty (VD: VNM, Vinamilk, GAS)…" autocomplete="off">
+      <div id="suggest" class="suggest"></div>
+      <div id="addform" class="addform hide"></div>
+    </div>
+    <div class="ips" id="ips"></div>
+    <div class="grid2">
+      <div class="card"><h2>Phân bổ tài sản</h2><div class="cbox" style="height:240px"><canvas id="donut"></canvas></div></div>
+      <div class="card">
+        <h2>Vị thế đang nắm · bấm 1 dòng để xem biểu đồ &amp; chi tiết</h2>
+        <table><thead><tr><th>Mã</th><th>Giá</th><th>Hôm nay</th><th>KL</th><th>Giá vốn</th><th>Giá trị</th><th>Lãi/lỗ</th><th>%</th><th>→ Stop/TP</th><th></th></tr></thead>
+        <tbody id="rows"></tbody></table>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Lệnh đã chốt (P&amp;L thực hiện trong kỳ thi)</h2>
+      <table><thead><tr><th>Mã</th><th>Giá vốn</th><th>Giá hiện tại</th><th>Lãi/lỗ thực hiện</th><th>%</th><th></th></tr></thead><tbody id="closed"></tbody></table>
+    </div>
+    <div class="note">Bấm 1 dòng cổ phiếu → xem <b>biểu đồ giá</b> + vùng stop/target + luận điểm FIC ngay trong trang. Giá nhúng sẵn (chốt 26/06); khi có mạng &amp; mở dạng web sẽ tự cập nhật live từ VNDIRECT.</div>
+  </section>
+
+  <!-- ===== VIEW: STOCK DETAIL ===== -->
+  <section id="view-stock" class="hide">
+    <button class="btn" onclick="showDash()" style="margin-bottom:14px">← Về dashboard</button>
+    <div id="stockBody"></div>
+  </section>
+
+  <!-- ===== VIEW: NGÀY CHỐT ===== -->
+  <section id="view-chot" class="hide">
+    <div style="margin-bottom:6px"><span class="sector">Đã thanh lý 100% tiền mặt</span></div>
+    <h2 style="font-size:21px;font-weight:800;margin-bottom:2px">Ngày chốt danh mục · <span class="gold">09/06/2026</span></h2>
+    <div class="macro" style="margin-bottom:16px">Kết quả chính thức kỳ thi 11/05–10/06/2026 · vốn gốc 500.000.000đ</div>
+    <div class="kpis" id="chotKpis"></div>
+    <div class="card" style="margin-bottom:13px"><h2>Đường hiệu suất lũy kế cả kỳ</h2><div class="cbox" style="height:230px"><canvas id="perf"></canvas></div></div>
+    <div class="grid">
+      <div class="card" style="margin:0"><h2>Lãi/lỗ thực hiện theo lệnh</h2><table id="trades"></table></div>
+      <div class="card" style="margin:0">
+        <h2>Đối chiếu về NAV chốt</h2>
+        <div class="kv"><span class="k">Vốn gốc</span><span class="v">500.000.000đ</span></div>
+        <div class="kv"><span class="k">Lãi/lỗ thực hiện (gộp)</span><span class="v up" id="gross"></span></div>
+        <div class="kv"><span class="k">Phí giao dịch &amp; thuế bán</span><span class="v down" id="fees"></span></div>
+        <div class="kv" style="font-size:15px"><span class="k">NAV chốt 09/06</span><span class="v" id="navc"></span></div>
+        <div class="kv"><span class="k">Lãi/lỗ ròng cả kỳ</span><span class="v" id="net"></span></div>
+        <p style="color:var(--muted);font-size:12px;margin-top:10px">Đỉnh +2,57% (27/05 · ~+12,8 tr) đã trả lại gần hết trong nhịp giảm cuối kỳ. Sau phí &amp; thuế, danh mục về <b>gần như hòa vốn</b>.</p>
+      </div>
+    </div>
+    <div class="card"><h2>Bài học chính rút ra</h2>
+      <ul>
+        <li><b>Mục tiêu 1:3 cứng nhắc trả lại lợi nhuận:</b> giữ đến khi chạm 1:3 khiến nhóm ngồi yên khi tape cảnh báo → mất sạch +2,5%. Sửa: tách R/R <i>vào lệnh</i> khỏi cách <i>chốt lời</i>; thêm lớp chốt lời linh hoạt khi lãi ≥2% mà vĩ mô xấu đi.</li>
+        <li><b>Stop-loss thực thi đúng:</b> MWG dính stop tuần 2, cắt sạch theo quy trình — đúng kỷ luật.</li>
+        <li><b>Tiền mặt là tài sản chủ động:</b> đệm 30% tránh ~4,85 tr lỗ; nhưng chỉ "khôn" khi thị trường giảm.</li>
+        <li><b>Cổ phiếu hàng hóa đọc theo chu kỳ:</b> DCM +9,44% nhờ coi là vị thế chu kỳ giá urê, chốt tại mục tiêu — không mắc bẫy "P/E thấp trên lợi nhuận đỉnh".</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===== VIEW: RỦI RO ===== -->
+  <section id="view-risk" class="hide">
+    <style>
+      #view-risk .cmx td,#view-risk .cmx th{text-align:center;padding:6px 8px;font-size:11.5px;white-space:nowrap;border-bottom:1px solid var(--line)}
+      #view-risk .cmx th{color:var(--muted)}
+      #view-risk tfoot td{font-weight:700;border-top:2px solid var(--line)}
+    </style>
+    <div style="margin-bottom:14px">
+      <h2 style="font-size:21px;font-weight:800;margin-bottom:2px">Chỉ số rủi ro danh mục <span class="sector" id="riskMode" style="margin-left:6px">·</span></h2>
+      <div class="macro" id="riskSub">Đang tải…</div>
+    </div>
+    <div class="kpis" id="riskKpis"></div>
+    <div class="card" style="margin-bottom:13px"><h2>Beta &amp; Biến động (σ năm) theo thời gian — rolling</h2><div class="cbox" style="height:260px"><canvas id="riskChart"></canvas></div></div>
+    <div class="grid">
+      <div class="card" style="margin:0"><h2>Rủi ro &amp; đóng góp beta theo mã</h2><table id="riskTable"></table></div>
+      <div class="card" style="margin:0"><h2>Ma trận tương quan (lợi suất ngày)</h2><div id="corrMatrix" style="overflow:auto"></div></div>
+    </div>
+    <div class="card"><h2>Phương pháp tính</h2><div id="riskNote" style="font-size:13px;color:var(--muted);line-height:1.7"></div></div>
+  </section>
+
+  <!-- ===== VIEW: TIN TỨC ===== -->
+  <section id="view-news" class="hide">
+    <style>
+      #view-news .news-item{padding:12px 2px;border-bottom:1px solid var(--line)}
+      #view-news a.t{color:var(--txt);text-decoration:none;font-weight:600;font-size:14px;line-height:1.4}
+      #view-news a.t:hover{color:var(--accent)}
+      #view-news .news-meta{font-size:11.5px;color:var(--muted);margin-top:5px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+      #view-news .src{font-weight:700;padding:1px 8px;border-radius:20px;font-size:10.5px}
+      #view-news .src-cafef{background:rgba(79,140,255,.15);color:#4f8cff}
+      #view-news .src-vietstock{background:rgba(34,197,94,.15);color:#22c55e}
+      #view-news .tk{background:rgba(245,179,1,.16);color:var(--gold);font-weight:700;padding:1px 7px;border-radius:5px;font-size:10.5px}
+      #view-news .news-snip{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.5}
+    </style>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <div><h2 style="font-size:21px;font-weight:800;margin-bottom:2px">Tin tức danh mục &amp; thị trường</h2>
+        <div class="macro" id="newsStatus">Đang tải…</div></div>
+      <button class="btn" onclick="renderNews(true)">↻ Cập nhật tin</button>
+    </div>
+    <div class="card" style="margin-bottom:13px"><h2>📌 Liên quan danh mục của bạn</h2><div id="newsPort"></div></div>
+    <div class="card"><h2>📰 Thị trường chung · nguồn CafeF &amp; Vietstock</h2><div id="newsMkt"></div></div>
+  </section>
+</div>
+
+<script>
+/* ============ DATA (nhúng sẵn) ============ */
+const SEED_T=[1779408000,1779667200,1779753600,1779840000,1779926400,1780012800,1780272000,1780358400,1780444800,1780531200,1780617600,1780876800,1780963200,1781049600,1781136000,1781222400,1781481600,1781568000,1781654400,1781740800,1781827200,1782086400,1782172800,1782259200,1782345600,1782432000];
+const FIC={navBase:500000000,navClose:499730740,
+  macro:"Kịch bản cơ sở 55% · GDP 2026 dự phóng 7,5–8,5% · ưu tiên bảo toàn vốn (horizon siêu ngắn)",
+  ips:{maxPositions:4,rr:"1 : 3",stopPct:"7–8% giá vào",beta:"< 1",trailing:"Khi lãi ≥ 10–15%"},
+  timeline:[{date:"11/05",pct:0,note:"Khởi điểm — giải ngân 30%"},{date:"20/05",pct:2.50,note:"Vùng đỉnh thứ nhất"},{date:"27/05",pct:2.57,note:"Đỉnh hiệu suất cả kỳ"},{date:"04/06",pct:1.01,note:"Bắt đầu thoái lui"},{date:"08/06",pct:-0.47,note:"Mất toàn bộ thành quả"},{date:"09/06",pct:-0.05,note:"Thanh lý — chốt kỳ"}],
+  positions:[
+    {sym:"VCB",name:"Vietcombank",sector:"Ngân hàng",status:"holding",shares:1400,avgCost:60640,entry:60640,stop:58700,target:66300,rr:"1:3",seedPrice:61400,seedPrev:60800,
+     seedHist:[63.5,63.7,64.4,64.2,62.8,62.0,62.2,61.6,61.9,62.2,61.7,61.3,61.5,61.7,61.6,61.6,61.6,61.8,62.2,61.6,61.7,61.3,61.3,61.0,60.8,61.4],
+     catalyst:"Thông tư 08/2026 nới cách tính LDR — VCB hưởng lợi nhất; khối ngoại mua ròng 594 tỷ phiên 19/05.",
+     sectorThesis:"Ngân hàng phân hóa chọn lọc; tín dụng ~15%; người thắng có CASA cao & Basel III. Tử huyệt: thanh khoản ép NIM (đáy ~2,9%), NPL ngành 2,2%.",
+     valuation:"P/B 1,9–2,0x · P/E ~13x · ROE đầu ngành. MUA, giá mục tiêu 75.000–84.900 (+19→36%)."},
+    {sym:"TCB",name:"Techcombank",sector:"Ngân hàng",status:"holding",shares:2700,avgCost:31750,entry:31750,stop:30800,target:34650,rr:"1:3",seedPrice:33400,seedPrev:33400,
+     seedHist:[32.2,32.55,32.9,33.65,32.6,32.75,32.35,31.9,31.55,31.45,31.7,30.85,30.9,30.95,30.85,31.25,31.7,31.75,31.45,31.2,30.95,30.9,32.05,32.5,33.4,33.4],
+     catalyst:"Kỳ vọng nới room tín dụng Q2 (CAR 15,2% dẫn đầu) + chu kỳ cổ tức 19/05.",
+     sectorThesis:"Ngân hàng phân hóa chọn lọc; lợi thế CASA & vốn dày (Basel III). Tử huyệt: thanh khoản ép NIM, NPL ngành 2,2%.",
+     valuation:"P/B 1,2x · ROE ~16%. MUA/Khả quan, giá mục tiêu TB 42.072 (+15→24%)."},
+    {sym:"HPG",name:"Hòa Phát",sector:"Thép / VLXD",status:"holding",shares:3500,avgCost:24250,entry:24250,stop:22530,target:29100,rr:"1:3",seedPrice:23500,seedPrev:23400,
+     seedHist:[23.96,24.1,24.25,24.15,24.0,24.0,24.05,23.7,24.15,23.95,23.75,23.3,23.55,23.6,23.3,23.2,24.35,24.2,24.0,23.65,23.6,23.6,23.3,23.5,23.4,23.5],
+     catalyst:"Thuế chống lẩn tránh HRC 27,83% + Dung Quất 2 tăng tốc; khối ngoại tích lũy ròng 6.224 tỷ.",
+     sectorThesis:"Thép phục hồi nhờ đầu tư công + thuế HRC. Tử huyệt: giá nguyên liệu, giải ngân chậm, dư cung Trung Quốc.",
+     valuation:"P/E 9,3–12,2x · P/B 1,3x · thị phần #1. MUA, giá mục tiêu 36.000–36.600 (+20→50%)."},
+    {sym:"MWG",name:"Thế Giới Di Động",sector:"Bán lẻ",status:"holding",shares:1100,avgCost:76920,entry:76920,stop:73500,target:87100,rr:"1:3",seedPrice:78500,seedPrev:77200,
+     seedHist:[79.4,78.7,78.5,80.0,77.7,76.3,79.1,77.9,78.5,78.4,78.0,76.4,77.4,78.2,76.9,76.4,79.4,79.4,79.1,78.7,78.0,77.2,76.0,77.8,77.2,78.5],
+     catalyst:"Sự kiện IPO Điện Máy Xanh tháng 5; khối ngoại mua ròng 1.564 tỷ. (Lệnh 1 dính stop tuần 2, vào lại lệnh 2.)",
+     sectorThesis:"Bán lẻ phục hồi từ đáy; LN bán lẻ Q1 +77%; kích cầu VAT. Tử huyệt: lạm phát bóp sức mua (CPI T4 ~5,5%).",
+     valuation:"P/E 12,3–13,8x · ROE 23–26%. MUA/Khả quan, giá mục tiêu 108.100–113.000 (+27→29%)."},
+    {sym:"DCM",name:"Đạm Cà Mau",sector:"Phân bón XK",status:"closed",shares:2080,avgCost:40800,entry:40800,stop:39450,target:44650,rr:"1:3",seedPrice:34750,seedPrev:34900,realizedPnl:3850000,realizedPct:9.44,
+     seedHist:[41.6,40.35,40.7,40.65,40.2,39.8,39.05,38.75,39.2,39.05,38.7,37.5,37.2,37.55,37.85,38.2,37.2,36.5,36.3,36.75,36.6,36.9,35.8,35.45,34.9,34.75],
+     catalyst:"Giá urê cao + Trung Quốc siết hạn ngạch + mùa vụ Hè Thu; khối ngoại mua ròng 1.564 tỷ.",
+     sectorThesis:"Phân bón XK hưởng lợi giá urê cao + TQ siết hạn ngạch + mùa vụ. Tử huyệt: chu kỳ đảo chiều khi TQ khôi phục XK (Q3).",
+     valuation:"EV/EBITDA ~4,5x · ROE cao (vùng đỉnh). MUA, mục tiêu 47.700–54.900. *Đọc theo chu kỳ, không phải 'rẻ thì giữ'.*"},
+    {sym:"FPT",name:"FPT Corp",sector:"Công nghệ",status:"closed",shares:1180,avgCost:71860,entry:71860,stop:69300,target:79700,rr:"1:3",seedPrice:70800,seedPrev:71000,realizedPnl:3048000,realizedPct:3.53,
+     seedHist:[74.08,72.5,73.49,72.6,71.2,71.6,72.9,74.8,76.5,76.1,75.0,72.9,73.7,74.2,73.1,73.5,73.6,73.2,72.3,71.6,71.5,70.6,70.8,70.8,71.0,70.8],
+     catalyst:"Dòng tiền nội hấp thụ lực bán ngoại; RSI phân kỳ dương. Chốt sớm trước ngày GDKHQ cổ tức.",
+     sectorThesis:"CNTT bứt phá nhờ AI/Data Center + FDI + ngân sách KHCN 3,6 tỷ USD. Tử huyệt: định giá nóng (P/E 20–30x), ngoại chốt lời.",
+     valuation:"P/E 11–14x · PEG 0,72 · ROE ~28%. MUA/Khả quan, giá mục tiêu trung vị 114.000."}
+  ]};
+
+/* ============ helpers ============ */
+const fmtVnd=n=>(n==null||isNaN(n))?"—":Math.round(n).toLocaleString("vi-VN");
+const fmtPct=n=>(n==null||isNaN(n))?"—":(n>=0?"+":"")+n.toFixed(2)+"%";
+const cls=n=>n>0?"up":n<0?"down":"flat";
+const bySym=s=>FIC.positions.find(p=>p.sym===(s||"").toUpperCase());
+
+let isLive=false;
+async function fetchHistory(sym){
+  const now=Math.floor(Date.now()/1000),from=now-86400*210;
+  const base=`https://dchart-api.vndirect.com.vn/dchart/history?symbol=${sym}&resolution=D&from=${from}&to=${now}`;
+  const routes=[u=>u,u=>`https://corsproxy.io/?url=${encodeURIComponent(u)}`];
+  for(const r of routes){try{const res=await fetch(r(base),{cache:"no-store"});if(!res.ok)continue;const j=await res.json();if(j&&j.s==="ok"&&j.c&&j.c.length){isLive=true;return j;}}catch(e){}}
+  return null;
+}
+async function getHistory(sym){const l=await fetchHistory(sym);if(l)return{...l,_live:true};const p=bySym(sym)||{};return{t:(p.histT||SEED_T).slice(),c:(p.histC||p.seedHist||[]).slice(),_live:false};}
+async function getQuote(sym){const h=await getHistory(sym);const p=bySym(sym)||{};if(h._live&&h.c.length){const c=h.c;return{price:Math.round(c[c.length-1]*1000),prev:Math.round((c.length>1?c[c.length-2]:c[c.length-1])*1000),live:true,history:h};}return{price:p.seedPrice??p.avgCost,prev:p.seedPrev??p.seedPrice??p.avgCost,live:false,history:h};}
+async function fetchCurrentPrice(sym){const j=await fetchHistory(sym);return j?Math.round(j.c[j.c.length-1]*1000):null;}
+
+/* ===== VN100 universe (tìm kiếm) ===== */
+const VN100=[{s:"VCB",n:"Vietcombank",sec:"Ngân hàng"},{s:"BID",n:"BIDV",sec:"Ngân hàng"},{s:"CTG",n:"VietinBank",sec:"Ngân hàng"},{s:"TCB",n:"Techcombank",sec:"Ngân hàng"},{s:"MBB",n:"MB Bank",sec:"Ngân hàng"},{s:"VPB",n:"VPBank",sec:"Ngân hàng"},{s:"ACB",n:"ACB",sec:"Ngân hàng"},{s:"HDB",n:"HDBank",sec:"Ngân hàng"},{s:"STB",n:"Sacombank",sec:"Ngân hàng"},{s:"SHB",n:"SHB",sec:"Ngân hàng"},{s:"VIB",n:"VIB",sec:"Ngân hàng"},{s:"TPB",n:"TPBank",sec:"Ngân hàng"},{s:"SSB",n:"SeABank",sec:"Ngân hàng"},{s:"LPB",n:"LPBank",sec:"Ngân hàng"},{s:"MSB",n:"MSB",sec:"Ngân hàng"},{s:"OCB",n:"OCB",sec:"Ngân hàng"},{s:"EIB",n:"Eximbank",sec:"Ngân hàng"},{s:"NAB",n:"Nam A Bank",sec:"Ngân hàng"},{s:"VIC",n:"Vingroup",sec:"Bất động sản"},{s:"VHM",n:"Vinhomes",sec:"Bất động sản"},{s:"VRE",n:"Vincom Retail",sec:"Bất động sản"},{s:"BCM",n:"Becamex IDC",sec:"Bất động sản"},{s:"NVL",n:"Novaland",sec:"Bất động sản"},{s:"PDR",n:"Phát Đạt",sec:"Bất động sản"},{s:"KDH",n:"Khang Điền",sec:"Bất động sản"},{s:"DXG",n:"Đất Xanh",sec:"Bất động sản"},{s:"NLG",n:"Nam Long",sec:"Bất động sản"},{s:"DIG",n:"DIC Corp",sec:"Bất động sản"},{s:"KBC",n:"Kinh Bắc",sec:"KCN"},{s:"HDC",n:"Hodeco",sec:"Bất động sản"},{s:"SCR",n:"TTC Land",sec:"Bất động sản"},{s:"TCH",n:"TC Group",sec:"Bất động sản"},{s:"SZC",n:"Sonadezi Châu Đức",sec:"KCN"},{s:"IJC",n:"Becamex IJC",sec:"Bất động sản"},{s:"SJS",n:"Sudico",sec:"Bất động sản"},{s:"VPI",n:"Văn Phú Invest",sec:"Bất động sản"},{s:"SSI",n:"SSI",sec:"Chứng khoán"},{s:"VND",n:"VNDirect",sec:"Chứng khoán"},{s:"HCM",n:"HSC",sec:"Chứng khoán"},{s:"VCI",n:"Vietcap",sec:"Chứng khoán"},{s:"VIX",n:"VIX",sec:"Chứng khoán"},{s:"FTS",n:"FPTS",sec:"Chứng khoán"},{s:"BSI",n:"BSC",sec:"Chứng khoán"},{s:"CTS",n:"CTS",sec:"Chứng khoán"},{s:"HPG",n:"Hòa Phát",sec:"Thép"},{s:"HSG",n:"Hoa Sen",sec:"Thép"},{s:"NKG",n:"Nam Kim",sec:"Thép"},{s:"SMC",n:"SMC",sec:"Thép"},{s:"BMP",n:"Bình Minh",sec:"VLXD"},{s:"AAA",n:"An Phát",sec:"Nhựa"},{s:"DGC",n:"Đức Giang",sec:"Hóa chất"},{s:"GVR",n:"Cao su VN",sec:"Cao su"},{s:"PHR",n:"Phước Hòa",sec:"Cao su"},{s:"DPR",n:"Đồng Phú",sec:"Cao su"},{s:"HT1",n:"Xi măng Hà Tiên",sec:"VLXD"},{s:"VGC",n:"Viglacera",sec:"VLXD"},{s:"VCG",n:"Vinaconex",sec:"Xây dựng"},{s:"CII",n:"CII",sec:"Hạ tầng"},{s:"CTD",n:"Coteccons",sec:"Xây dựng"},{s:"HBC",n:"Xây dựng HBC",sec:"Xây dựng"},{s:"FCN",n:"Fecon",sec:"Xây dựng"},{s:"HHV",n:"Đèo Cả",sec:"Hạ tầng"},{s:"LCG",n:"Licogi 16",sec:"Xây dựng"},{s:"PC1",n:"PC1 Group",sec:"Xây dựng"},{s:"GEX",n:"Gelex",sec:"Đa ngành"},{s:"REE",n:"REE",sec:"Tiện ích"},{s:"GMD",n:"Gemadept",sec:"Cảng biển"},{s:"HAH",n:"Hải An",sec:"Vận tải biển"},{s:"VSC",n:"Viconship",sec:"Cảng biển"},{s:"GAS",n:"PV Gas",sec:"Dầu khí"},{s:"PLX",n:"Petrolimex",sec:"Dầu khí"},{s:"POW",n:"PV Power",sec:"Điện"},{s:"NT2",n:"Nhơn Trạch 2",sec:"Điện"},{s:"PGV",n:"EVNGenco3",sec:"Điện"},{s:"PVD",n:"PV Drilling",sec:"Dầu khí"},{s:"PVT",n:"PV Trans",sec:"Dầu khí"},{s:"DCM",n:"Đạm Cà Mau",sec:"Phân bón"},{s:"DPM",n:"Đạm Phú Mỹ",sec:"Phân bón"},{s:"GEG",n:"Điện Gia Lai",sec:"Điện"},{s:"MWG",n:"Thế Giới Di Động",sec:"Bán lẻ"},{s:"MSN",n:"Masan Group",sec:"Tiêu dùng"},{s:"VNM",n:"Vinamilk",sec:"Tiêu dùng"},{s:"SAB",n:"Sabeco",sec:"Đồ uống"},{s:"PNJ",n:"PNJ",sec:"Bán lẻ"},{s:"FRT",n:"FPT Retail",sec:"Bán lẻ"},{s:"DGW",n:"Digiworld",sec:"Bán lẻ"},{s:"DBC",n:"Dabaco",sec:"Chăn nuôi"},{s:"BAF",n:"BAF Việt Nam",sec:"Chăn nuôi"},{s:"SBT",n:"TTC AgriS",sec:"Nông nghiệp"},{s:"KDC",n:"Kido",sec:"Tiêu dùng"},{s:"VHC",n:"Vĩnh Hoàn",sec:"Thủy sản"},{s:"ANV",n:"Nam Việt",sec:"Thủy sản"},{s:"PAN",n:"PAN Group",sec:"Nông nghiệp"},{s:"FPT",n:"FPT Corp",sec:"Công nghệ"},{s:"CMG",n:"CMC Corp",sec:"Công nghệ"},{s:"ELC",n:"Elcom",sec:"Công nghệ"},{s:"VJC",n:"Vietjet Air",sec:"Hàng không"},{s:"HVN",n:"Vietnam Airlines",sec:"Hàng không"},{s:"BVH",n:"Bảo Việt",sec:"Bảo hiểm"},{s:"HAG",n:"HAGL",sec:"Nông nghiệp"},{s:"HNG",n:"HAGL Agrico",sec:"Nông nghiệp"},{s:"TLG",n:"Thiên Long",sec:"Tiêu dùng"},{s:"GIL",n:"Gilimex",sec:"Dệt may"},{s:"DXS",n:"Đất Xanh Services",sec:"Bất động sản"}];
+
+/* ===== vị thế tự thêm (localStorage) ===== */
+const FIC_LS_KEY="fic_user_positions";
+function saveUserPositions(){try{localStorage.setItem(FIC_LS_KEY,JSON.stringify(FIC.positions.filter(p=>p.userAdded)));}catch(e){}}
+function loadUserPositions(){try{const raw=localStorage.getItem(FIC_LS_KEY);if(!raw)return;JSON.parse(raw).forEach(p=>{if(!bySym(p.sym)){p.userAdded=true;FIC.positions.push(p);}});}catch(e){}}
+function removePosition(sym){const i=FIC.positions.findIndex(p=>p.sym===sym&&p.userAdded);if(i>=0){FIC.positions.splice(i,1);saveUserPositions();}}
+async function addPositionBySearch(sym,name,sector,shares,avgCost){sym=(sym||"").toUpperCase();let hist=null,price=avgCost,prev=avgCost;try{const h=await fetchHistory(sym);if(h){hist=h;price=Math.round(h.c[h.c.length-1]*1000);prev=Math.round((h.c.length>1?h.c[h.c.length-2]:h.c[h.c.length-1])*1000);}}catch(e){}const stop=Math.round(avgCost*0.925),target=Math.round(avgCost*1.225);const pos={sym,name:name||sym,sector:sector||"VN100",status:"holding",shares:Number(shares),avgCost:Math.round(avgCost),entry:Math.round(avgCost),stop,target,rr:"1:3",seedPrice:Math.round(price),seedPrev:Math.round(prev),histT:hist?hist.t.slice():null,histC:hist?hist.c.slice():null,userAdded:true,catalyst:"Mã tự thêm vào danh mục — chưa gắn luận điểm FIC. Stop/Target auto theo IPS (stop −7,5% giá vốn, R/R 1:3).",sectorThesis:"(Chưa có phân tích ngành cho mã tự thêm.)",valuation:"(Chưa có định giá cho mã tự thêm.)"};const i=FIC.positions.findIndex(p=>p.sym===sym);if(i>=0)FIC.positions.splice(i,1);FIC.positions.push(pos);saveUserPositions();return pos;}
+
+/* ============ charts lifecycle ============ */
+let donutC=null,priceC=null,perfC=null;
+const co={responsive:true,maintainAspectRatio:false};
+
+/* ============ ROUTER ============ */
+function setView(id,navId){
+  ["view-dash","view-stock","view-chot","view-risk","view-news"].forEach(v=>document.getElementById(v).classList.toggle("hide",v!==id));
+  document.getElementById("nav-dash").classList.toggle("active",navId==="nav-dash");
+  document.getElementById("nav-risk").classList.toggle("active",navId==="nav-risk");
+  document.getElementById("nav-news").classList.toggle("active",navId==="nav-news");
+  document.getElementById("nav-chot").classList.toggle("active",navId==="nav-chot");
+  window.scrollTo(0,0);
+}
+function showDash(){setView("view-dash","nav-dash");renderDash();}
+function showChot(){setView("view-chot","nav-chot");renderChot();}
+function showStock(sym){setView("view-stock",null);renderStock(sym);}
+
+/* ============ DASHBOARD ============ */
+function ipsChip(l,v,st){const b=st==="ok"?"b-ok":st==="warn"?"b-warn":st==="bad"?"b-bad":"";const bd=st?`<span class="badge ${b}">${st==="ok"?"ĐẠT":st==="warn"?"THEO DÕI":"CẢNH BÁO"}</span>`:"";return `<div class="chip"><b>${l}:</b> ${v} ${bd}</div>`;}
+function posPill(price,p){if(price<=p.stop)return '<span class="pill p-stop">CHẠM STOP</span>';if(price>=p.target)return '<span class="pill p-tp">CHẠM TARGET</span>';if((price-p.stop)/price*100<3)return '<span class="pill p-near">GẦN STOP</span>';return '<span class="pill p-hold">ĐANG NẮM</span>';}
+
+async function renderDash(){
+  document.getElementById("macro").textContent=FIC.macro;
+  const holds=FIC.positions.filter(p=>p.status==="holding"),closed=FIC.positions.filter(p=>p.status==="closed");
+  const q=await Promise.all(holds.map(p=>getQuote(p.sym)));
+  const cq=await Promise.all(closed.map(p=>getQuote(p.sym)));
+  let mv=0,cost=0,day=0;
+  document.getElementById("rows").innerHTML=holds.map((p,i)=>{
+    const x=q[i],v=p.shares*x.price,c=p.shares*p.avgCost,pnl=v-c,pct=pnl/c*100,d=p.shares*(x.price-x.prev),dp=(x.price-x.prev)/x.prev*100;
+    mv+=v;cost+=c;day+=d;
+    return `<tr class="clk" onclick="showStock('${p.sym}')"><td><div class="sym">${p.sym}</div><div class="nm">${p.sector}</div></td>
+      <td>${fmtVnd(x.price)}</td><td class="${cls(dp)}">${fmtPct(dp)}</td><td>${p.shares.toLocaleString("vi-VN")}</td>
+      <td>${fmtVnd(p.avgCost)}</td><td>${fmtVnd(v)}</td><td class="${cls(pnl)}">${pnl>=0?"+":""}${fmtVnd(pnl)}</td>
+      <td class="${cls(pnl)}">${fmtPct(pct)}</td><td>${posPill(x.price,p)}</td><td class="arrow">${p.userAdded?`<span class="rm" onclick="event.stopPropagation();removeAndRender('${p.sym}')" title="Xóa">✕</span> `:''}Biểu đồ ›</td></tr>`;
+  }).join("");
+  const cash=FIC.navBase-cost,nav=cash+mv,tot=nav-FIC.navBase,dayPct=day/(nav-day)*100,cashPct=cash/nav*100;
+  document.getElementById("nav").textContent=fmtVnd(nav)+"đ";
+  const pe=document.getElementById("pnl");pe.textContent=(tot>=0?"+":"")+fmtVnd(tot)+"đ";pe.className="val "+cls(tot);
+  const pp=document.getElementById("pnlPct");pp.textContent=fmtPct(tot/FIC.navBase*100)+" so với vốn gốc";pp.className="sub "+cls(tot);
+  const de=document.getElementById("day");de.textContent=(day>=0?"+":"")+fmtVnd(day)+"đ";de.className="val "+cls(day);
+  const dpp=document.getElementById("dayPct");dpp.textContent=fmtPct(dayPct);dpp.className="sub "+cls(day);
+  document.getElementById("cash").textContent=fmtVnd(cash)+"đ";document.getElementById("cashPct").textContent=cashPct.toFixed(1)+"% (mục tiêu 30%)";
+  const dd=tot<0?tot/FIC.navBase*100:0,ddS=dd<=-8?"bad":dd<=-5?"warn":"ok";
+  document.getElementById("ips").innerHTML=ipsChip("Drawdown",dd.toFixed(2)+"% / -8%",ddS)+ipsChip("Tiền mặt",cashPct.toFixed(0)+"% / 30%",Math.abs(cashPct-30)<=8?"ok":"warn")+ipsChip("Số vị thế",holds.length+" / 4","ok")+ipsChip("R/R",FIC.ips.rr,"ok")+ipsChip("Stop-loss",FIC.ips.stopPct,"")+ipsChip("Beta",FIC.ips.beta,"");
+  document.getElementById("closed").innerHTML=closed.map((p,i)=>`<tr class="clk" onclick="showStock('${p.sym}')"><td><div class="sym">${p.sym}</div><div class="nm">${p.sector}</div></td><td>${fmtVnd(p.avgCost)}</td><td>${fmtVnd(cq[i].price)}</td><td class="${cls(p.realizedPnl)}">${p.realizedPnl>=0?"+":""}${fmtVnd(p.realizedPnl)}</td><td class="${cls(p.realizedPnl)}">${fmtPct(p.realizedPct)}</td><td class="arrow">Biểu đồ ›</td></tr>`).join("");
+  // donut
+  if(donutC)donutC.destroy();
+  donutC=new Chart(document.getElementById("donut"),{type:"doughnut",
+    data:{labels:holds.map(p=>p.sym).concat(["Tiền mặt"]),datasets:[{data:holds.map((p,i)=>q[i].price*p.shares).concat([cash]),backgroundColor:["#4f8cff","#22c55e","#f5b301","#a855f7","#64748b"],borderColor:"#0e1420",borderWidth:2}]},
+    options:{...co,plugins:{legend:{position:"bottom",labels:{color:"#cfd9ee",boxWidth:12,font:{size:12}}}},cutout:"62%"}});
+  setStatus();
+}
+
+/* ============ STOCK DETAIL ============ */
+async function renderStock(sym){
+  const p=bySym(sym);const hist=await getHistory(sym);const live=hist._live;
+  const price=hist.c.length?Math.round(hist.c[hist.c.length-1]*1000):(p.seedPrice||p.avgCost||0),prev=hist.c.length>1?Math.round(hist.c[hist.c.length-2]*1000):price,dpct=prev?(price-prev)/prev*100:0;
+  const mv=p.shares*price,cost=p.shares*p.avgCost,pnl=mv-cost,pct=pnl/cost*100,toStop=(price-p.stop)/price*100,toTgt=(p.target-price)/price*100;
+  let pos=(price-p.stop)/(p.target-p.stop)*100;pos=Math.max(2,Math.min(98,pos));
+  const realized=p.status==="closed";
+  document.getElementById("stockBody").innerHTML=`
+    ${realized?`<div class="banner">✓ Lệnh đã chốt trong kỳ thi · P&L thực hiện ${p.realizedPnl>=0?"+":""}${fmtVnd(p.realizedPnl)}đ (${fmtPct(p.realizedPct)}). Số liệu vị thế bên dưới mang tính tham chiếu.</div>`:""}
+    <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:16px">
+      <div><div style="font-size:30px;font-weight:800">${sym} <span style="color:var(--muted);font-size:14px">${p.name}</span></div><span class="sector" style="margin-top:5px">${p.sector} · ${realized?"Đã chốt":"Đang nắm"}</span></div>
+      <div style="text-align:right"><div style="font-size:34px;font-weight:800">${fmtVnd(price)}đ</div><div style="font-weight:700;font-size:14px" class="${cls(dpct)}">${fmtPct(dpct)} hôm nay</div></div>
+    </div>
+    <div class="grid">
+      <div class="card"><h2 id="ctitle">Diễn biến giá & vùng giao dịch</h2><div class="cbox" style="height:280px"><canvas id="price"></canvas></div></div>
+      <div class="card"><h2>Vị thế</h2>
+        <div class="kv"><span class="k">Khối lượng</span><span class="v">${p.shares.toLocaleString("vi-VN")} cp</span></div>
+        <div class="kv"><span class="k">Giá vốn TB</span><span class="v">${fmtVnd(p.avgCost)}đ</span></div>
+        <div class="kv"><span class="k">Giá trị thị trường</span><span class="v">${fmtVnd(mv)}đ</span></div>
+        <div class="kv"><span class="k">Lãi/lỗ tạm tính</span><span class="v ${cls(pnl)}">${pnl>=0?"+":""}${fmtVnd(pnl)}đ</span></div>
+        <div class="kv"><span class="k">% Lãi/lỗ</span><span class="v ${cls(pnl)}">${fmtPct(pct)}</span></div>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="card"><h2>Quản trị rủi ro (khung Elder · IPS)</h2>
+        <div class="bar"><div class="mk" style="left:${pos}%"><b>${fmtVnd(price)}</b></div></div>
+        <div class="ends"><span>⛔ Stop ${fmtVnd(p.stop)}</span><span>🎯 Target ${fmtVnd(p.target)}</span></div>
+        <div class="kv" style="margin-top:12px"><span class="k">Tới Stop</span><span class="v ${toStop<3?"down":"flat"}">${toStop>=0?"-":""}${Math.abs(toStop).toFixed(1)}%</span></div>
+        <div class="kv"><span class="k">Tới Target</span><span class="v up">+${toTgt.toFixed(1)}%</span></div>
+        <div class="kv"><span class="k">R/R vào lệnh</span><span class="v">${p.rr}</span></div>
+        <div class="kv"><span class="k">Giá vào lệnh gốc</span><span class="v">${fmtVnd(p.entry)}đ</span></div>
+      </div>
+      <div class="card thesis"><h2>Luận điểm vào lệnh (FIC)</h2><p><span class="lab">⚡ Catalyst / Timing / Flow</span>${p.catalyst}</p></div>
+    </div>
+    <div class="card thesis"><h2>Bối cảnh ngành & Định giá</h2><p><span class="lab">🏭 Ngành — trạng thái & tử huyệt</span>${p.sectorThesis}</p><p><span class="lab">💰 Định giá & khuyến nghị</span>${p.valuation}</p></div>`;
+  document.getElementById("ctitle").textContent="Diễn biến giá & vùng giao dịch"+(live?" · live ~6 tháng":" · 26 phiên (nhúng)");
+  const labels=hist.t.map(t=>{const d=new Date(t*1000);return (d.getMonth()+1)+"/"+d.getDate();}),close=hist.c.map(x=>x*1000),flat=v=>close.map(()=>v);
+  if(priceC)priceC.destroy();
+  priceC=new Chart(document.getElementById("price"),{type:"line",
+    data:{labels,datasets:[{label:"Giá",data:close,borderColor:"#4f8cff",backgroundColor:"rgba(79,140,255,.12)",fill:true,tension:.25,pointRadius:0,borderWidth:2},{label:"Giá vốn",data:flat(p.avgCost),borderColor:"#cfd9ee",borderDash:[5,4],pointRadius:0,borderWidth:1},{label:"Stop",data:flat(p.stop),borderColor:"#f43f5e",borderDash:[5,4],pointRadius:0,borderWidth:1},{label:"Target",data:flat(p.target),borderColor:"#22c55e",borderDash:[5,4],pointRadius:0,borderWidth:1}]},
+    options:{...co,interaction:{mode:"index",intersect:false},plugins:{legend:{labels:{color:"#cfd9ee",boxWidth:12,font:{size:11}}}},scales:{x:{ticks:{color:"#8a98b3",maxTicksLimit:8,font:{size:10}},grid:{display:false}},y:{ticks:{color:"#8a98b3",font:{size:11},callback:v=>(v/1000).toFixed(0)+"k"},grid:{color:"#1b2436"}}}}});
+}
+
+/* ============ NGÀY CHỐT ============ */
+function renderChot(){
+  const T=FIC.timeline;
+  const trades=[["DCM",3850000,9.44,"Chạm mục tiêu, đóng góp lớn nhất"],["FPT",3048000,3.53,"Chốt trước ngày GDKHQ cổ tức"],["VCB",1260000,1.48,"Neo phòng thủ"],["MWG (lệnh 2)",528000,0.62,"Vào lại sau khi lệnh 1 bị cắt"],["TCB",-1890000,-2.20,"—"],["HPG",-2765000,-3.25,"Vị thế yếu nhất kỳ"],["MWG (lệnh 1)",-3120000,-3.92,"Dính stop-loss tuần 2"]];
+  const gross=trades.reduce((s,t)=>s+t[1],0),navc=FIC.navClose,net=navc-FIC.navBase,fees=FIC.navBase+gross-navc;
+  document.getElementById("chotKpis").innerHTML=`
+    <div class="kpi"><div class="lab">NAV chốt 09/06</div><div class="val">${fmtVnd(navc)}đ</div><div class="sub flat">vốn gốc 500.000.000đ</div></div>
+    <div class="kpi"><div class="lab">Lãi/lỗ ròng</div><div class="val ${cls(net)}">${net>=0?"+":""}${fmtVnd(net)}đ</div><div class="sub ${cls(net)}">${fmtPct(net/FIC.navBase*100)}</div></div>
+    <div class="kpi"><div class="lab">Đỉnh hiệu suất</div><div class="val gold">+2,57%</div><div class="sub flat">phiên 27/05</div></div>
+    <div class="kpi"><div class="lab">Số lệnh đã đóng</div><div class="val">7</div><div class="sub flat">trên 6 mã · max 4 vị thế</div></div>`;
+  document.getElementById("trades").innerHTML=`<thead><tr><th>Lệnh</th><th>Lãi/lỗ</th><th>%</th><th>Ghi chú</th></tr></thead><tbody>`+trades.map(t=>`<tr><td><b>${t[0]}</b></td><td class="${cls(t[1])}">${t[1]>=0?"+":""}${fmtVnd(t[1])}</td><td class="${cls(t[1])}">${fmtPct(t[2])}</td><td class="nm">${t[3]}</td></tr>`).join("")+`</tbody>`;
+  document.getElementById("gross").textContent="+"+fmtVnd(gross)+"đ";
+  document.getElementById("fees").textContent="−"+fmtVnd(fees)+"đ";
+  document.getElementById("navc").textContent=fmtVnd(navc)+"đ";
+  const ne=document.getElementById("net");ne.textContent=(net>=0?"+":"")+fmtVnd(net)+"đ ("+fmtPct(net/FIC.navBase*100)+")";ne.className="v "+cls(net);
+  if(perfC)perfC.destroy();
+  perfC=new Chart(document.getElementById("perf"),{type:"line",
+    data:{labels:T.map(x=>x.date),datasets:[{label:"Hiệu suất lũy kế (%)",data:T.map(x=>x.pct),borderColor:"#f5b301",backgroundColor:"rgba(245,179,1,.12)",fill:true,tension:.3,pointRadius:5,pointBackgroundColor:T.map(x=>x.pct>=0?"#22c55e":"#f43f5e"),borderWidth:2},{label:"Hòa vốn",data:T.map(()=>0),borderColor:"#64748b",borderDash:[5,4],pointRadius:0,borderWidth:1}]},
+    options:{...co,interaction:{mode:"index",intersect:false},plugins:{legend:{labels:{color:"#cfd9ee",boxWidth:12,font:{size:11}}},tooltip:{callbacks:{afterLabel:c=>T[c.dataIndex].note}}},scales:{x:{ticks:{color:"#8a98b3"},grid:{display:false}},y:{ticks:{color:"#8a98b3",callback:v=>v+"%"},grid:{color:"#1b2436"}}}}});
+}
+
+function setStatus(){const now=new Date().toLocaleTimeString("vi-VN");document.getElementById("dot").className="dot "+(isLive?"live":"seed");document.getElementById("stat").textContent=(isLive?"🟢 Live · VNDIRECT":"🟡 Dữ liệu mẫu (chốt 26/06)")+" · "+now;}
+
+/* ============ RỦI RO: Beta, Sigma, VaR, Sharpe (real-time) ============ */
+const SEED_MKT=[1877.13,1886.03,1884.18,1874.43,1863.67,1863.49,1844.54,1826.47,1819.01,1831.55,1838.9,1790.53,1793.05,1803.71,1798.61,1791.65,1799.31,1807.94,1806.2,1830.47,1824.53,1857.91,1869.04,1878.02,1863.07,1871.91]; // VN-Index khớp SEED_T
+const RF=0.045; // lãi suất phi rủi ro giả định/năm
+const _mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const _cov=(a,b)=>{const ma=_mean(a),mb=_mean(b);let s=0;for(let i=0;i<a.length;i++)s+=(a[i]-ma)*(b[i]-mb);return s/(a.length-1);};
+const _var=a=>_cov(a,a);
+const _sd=a=>Math.sqrt(Math.max(0,_var(a)));
+const _rets=a=>a.slice(1).map((v,i)=>v/a[i]-1);
+const _corr=(a,b)=>{const d=_sd(a)*_sd(b);return d?_cov(a,b)/d:0;};
+
+async function getMarketHistory(){
+  const l=await fetchHistory("VNINDEX"); if(l&&l.c&&l.c.length) return {t:l.t,c:l.c,_live:true};
+  return {t:SEED_T.slice(),c:SEED_MKT.slice(),_live:false};
+}
+
+async function computeRisk(){
+  const holds=FIC.positions.filter(p=>p.status==="holding");
+  if(!holds.length) return {ok:false,reason:"Danh mục chưa có vị thế nào."};
+  const hs=await Promise.all(holds.map(p=>getHistory(p.sym)));
+  const mkt=await getMarketHistory();
+  let live=mkt._live;
+  const series=[];
+  holds.forEach((p,i)=>{const h=hs[i]; if(h&&h.c&&h.c.length>=5){series.push({p,m:new Map(h.t.map((t,j)=>[t,h.c[j]]))}); if(h._live)live=true;}});
+  const excluded=holds.length-series.length;
+  if(!series.length) return {ok:false,reason:"Các mã chưa đủ dữ liệu giá để tính rủi ro (mã tự thêm cần internet).",excluded};
+  const mmap=new Map(mkt.t.map((t,j)=>[t,mkt.c[j]]));
+  const common=mkt.t.filter(t=>series.every(s=>s.m.has(t))).sort((a,b)=>a-b);
+  if(common.length<6) return {ok:false,reason:"Không đủ phiên giá chung để tính (cần ≥6 phiên).",excluded};
+  const closes=series.map(s=>common.map(t=>s.m.get(t)));
+  const mcl=common.map(t=>mmap.get(t));
+  const Rm=_rets(mcl), Ri=closes.map(_rets), n=Rm.length;
+  const last=closes.map(c=>c[c.length-1]);
+  const mvArr=series.map((s,i)=>s.p.shares*last[i]);
+  const eqMVk=mvArr.reduce((a,b)=>a+b,0);
+  const w=mvArr.map(x=>x/eqMVk);
+  const Rp=[]; for(let t=0;t<n;t++){let r=0;for(let i=0;i<series.length;i++)r+=w[i]*Ri[i][t];Rp.push(r);}
+  const betaEq=_cov(Rp,Rm)/_var(Rm), sigEqd=_sd(Rp), sigEqa=sigEqd*Math.sqrt(252);
+  const investedCost=holds.reduce((s,p)=>s+p.shares*p.avgCost,0);
+  const cash=FIC.navBase-investedCost, eqMV=eqMVk*1000, NAV=cash+eqMV, eqFrac=NAV?eqMV/NAV:0;
+  const betaNAV=betaEq*eqFrac, sigNAVd=sigEqd*eqFrac, sigNAVa=sigNAVd*Math.sqrt(252);
+  const VaR=1.645*sigNAVd*NAV, sharpe=sigEqa?(_mean(Rp)*252-RF)/sigEqa:0;
+  const per=series.map((s,i)=>({sym:s.p.sym,w:w[i],beta:_cov(Ri[i],Rm)/_var(Rm),vol:_sd(Ri[i])*Math.sqrt(252),corr:_corr(Ri[i],Rm),contrib:w[i]*_cov(Ri[i],Rm)/_var(Rm)}));
+  const corrM=Ri.map(a=>Ri.map(b=>_corr(a,b)));
+  const W=n>=40?20:Math.max(5,Math.floor(n/2)), roll=[];
+  for(let t=W;t<=n;t++){const rp=Rp.slice(t-W,t),rm=Rm.slice(t-W,t);roll.push({date:common[t],beta:(_cov(rp,rm)/_var(rm))*eqFrac,vol:_sd(rp)*Math.sqrt(252)*eqFrac*100});}
+  return {ok:true,live,n,W,betaEq,betaNAV,sigEqa,sigNAVa,sigNAVd,VaR,sharpe,NAV,eqFrac,per,corrM,syms:series.map(s=>s.p.sym),roll,excluded};
+}
+
+let riskChartC=null;
+async function renderRisk(){
+  const el=id=>document.getElementById(id);
+  el("riskKpis").innerHTML='<div style="color:var(--muted);padding:14px;grid-column:1/-1">Đang tính rủi ro…</div>';
+  const r=await computeRisk();
+  if(!r.ok){ el("riskKpis").innerHTML=`<div class="card" style="grid-column:1/-1;color:var(--gold)">${r.reason}</div>`; el("riskTable").innerHTML=""; el("corrMatrix").innerHTML=""; el("riskNote").innerHTML=""; if(riskChartC){riskChartC.destroy();riskChartC=null;} return; }
+  el("riskMode").textContent=r.live?"🟢 Live · VN-Index":"🟡 Dữ liệu mẫu (26 phiên)";
+  el("riskSub").textContent=`Benchmark VN-Index · ${r.n} phiên lợi suất · rolling ${r.W} phiên · NAV ${fmtVnd(r.NAV)}đ`;
+  el("riskKpis").innerHTML=`
+    <div class="kpi"><div class="lab">Beta danh mục (NAV)</div><div class="val ${r.betaNAV<1?'up':'down'}">${r.betaNAV.toFixed(2)}</div><div class="sub flat">equity ${r.betaEq.toFixed(2)} · IPS &lt;1 ${r.betaNAV<1?'✓':'✗'}</div></div>
+    <div class="kpi"><div class="lab">Biến động σ (năm)</div><div class="val">${(r.sigNAVa*100).toFixed(1)}%</div><div class="sub flat">equity ${(r.sigEqa*100).toFixed(1)}% · ngày ${(r.sigNAVd*100).toFixed(2)}%</div></div>
+    <div class="kpi"><div class="lab">VaR 95% (1 ngày)</div><div class="val down">${fmtVnd(r.VaR)}đ</div><div class="sub down">${(r.VaR/r.NAV*100).toFixed(2)}% NAV</div></div>
+    <div class="kpi"><div class="lab">Sharpe (năm)</div><div class="val ${r.sharpe>=0?'up':'down'}">${r.sharpe.toFixed(2)}</div><div class="sub flat">Rf giả định ${(RF*100).toFixed(1)}%</div></div>`;
+  el("riskTable").innerHTML=`<thead><tr><th>Mã</th><th>Tỷ trọng</th><th>Beta</th><th>σ năm</th><th>Tương quan VNI</th><th>Đóng góp β</th></tr></thead><tbody>`+
+    r.per.map(p=>`<tr><td><b>${p.sym}</b></td><td>${(p.w*100).toFixed(1)}%</td><td class="${p.beta<1?'up':'down'}">${p.beta.toFixed(2)}</td><td>${(p.vol*100).toFixed(0)}%</td><td>${p.corr.toFixed(2)}</td><td>${p.contrib.toFixed(3)}</td></tr>`).join("")+
+    `</tbody><tfoot><tr><td>Danh mục (equity)</td><td>100%</td><td class="${r.betaEq<1?'up':'down'}">${r.betaEq.toFixed(2)}</td><td>${(r.sigEqa*100).toFixed(0)}%</td><td>—</td><td>${r.betaEq.toFixed(3)}</td></tr></tfoot>`;
+  el("corrMatrix").innerHTML=`<table class="cmx"><thead><tr><th></th>${r.syms.map(s=>`<th>${s}</th>`).join("")}</tr></thead><tbody>`+
+    r.corrM.map((row,i)=>`<tr><th>${r.syms[i]}</th>${row.map(v=>{const g=v>=0?Math.round(v*130):0,rd=v<0?Math.round(-v*130):0;return `<td style="background:rgba(${rd},${g},100,.22)">${v.toFixed(2)}</td>`;}).join("")}</tr>`).join("")+`</tbody></table>`;
+  el("riskNote").innerHTML=`Lợi suất ngày từ giá đóng cửa (${r.live?'live ~6 tháng':'26 phiên nhúng'}). <b>Beta</b> = Cov(Rp,Rm)/Var(Rm), Rm = VN-Index. <b>σ</b> annualized ×√252. <b>Beta/σ ở mức NAV</b> = mức equity × tỷ trọng cổ phiếu (${(r.eqFrac*100).toFixed(0)}%) — 30% tiền mặt kéo rủi ro xuống đúng tinh thần IPS (beta &lt;1). <b>VaR 95% 1 ngày</b> = 1,645×σ_ngày×NAV (phân phối chuẩn, tham số). <b>Sharpe</b> = (LN kỳ vọng năm − Rf ${(RF*100).toFixed(1)}%)/σ_năm.${r.excluded?` <br>⚠️ ${r.excluded} mã thiếu dữ liệu giá (tự thêm, cần internet) đã loại khỏi tính toán.`:''} Cửa sổ ngắn (seed) chỉ mang tính minh hoạ — mở online để có ~6 tháng dữ liệu cho beta/Sharpe ổn định.`;
+  const labels=r.roll.map(x=>{const d=new Date(x.date*1000);return (d.getMonth()+1)+"/"+d.getDate();});
+  if(riskChartC)riskChartC.destroy();
+  riskChartC=new Chart(el("riskChart"),{type:"line",
+    data:{labels,datasets:[
+      {label:"Beta (NAV)",data:r.roll.map(x=>x.beta),borderColor:"#4f8cff",tension:.25,pointRadius:0,borderWidth:2,yAxisID:"y"},
+      {label:"σ năm (NAV) %",data:r.roll.map(x=>x.vol),borderColor:"#f5b301",tension:.25,pointRadius:0,borderWidth:2,yAxisID:"y1"},
+      {label:"Beta = 1 (IPS)",data:r.roll.map(()=>1),borderColor:"#f43f5e",borderDash:[5,4],pointRadius:0,borderWidth:1,yAxisID:"y"}
+    ]},
+    options:{...co,interaction:{mode:"index",intersect:false},plugins:{legend:{labels:{color:"#cfd9ee",boxWidth:12,font:{size:11}}}},
+      scales:{x:{ticks:{color:"#8a98b3",maxTicksLimit:8,font:{size:10}},grid:{display:false}},
+        y:{position:"left",title:{display:true,text:"Beta",color:"#8a98b3"},ticks:{color:"#8a98b3"},grid:{color:"#1b2436"}},
+        y1:{position:"right",title:{display:true,text:"σ %/năm",color:"#8a98b3"},ticks:{color:"#8a98b3"},grid:{display:false}}}}});
+}
+function showRisk(){setView("view-risk","nav-risk");renderRisk();}
+
+/* ============ TIN TỨC: CafeF + Vietstock (RSS, real-time) ============ */
+const NEWS_FEEDS=[
+  {src:"CafeF",url:"https://cafef.vn/thi-truong-chung-khoan.rss"},
+  {src:"CafeF",url:"https://cafef.vn/doanh-nghiep.rss"},
+  {src:"Vietstock",url:"https://vietstock.vn/830/chung-khoan/co-phieu.rss"}
+];
+let newsCache=null,newsTime=0;
+async function fetchText(url){
+  const routes=[u=>u,u=>`https://corsproxy.io/?url=${encodeURIComponent(u)}`,u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`];
+  for(const r of routes){try{const res=await fetch(r(url),{cache:"no-store"});if(!res.ok)continue;const t=await res.text();if(t&&t.indexOf("<item")>=0)return t;}catch(e){}}
+  return null;
+}
+function parseDate(s){let d=new Date(s);if(isNaN(d))return new Date(0);if(d.getFullYear()<2000)d.setFullYear(d.getFullYear()+100);return d;}
+function stripHtml(s){const x=document.createElement("div");x.innerHTML=s||"";const t=(x.textContent||"").replace(/\s+/g," ").trim();return t.length>170?t.slice(0,170)+"…":t;}
+function parseRSS(xml,src){
+  try{const doc=new DOMParser().parseFromString(xml,"text/xml");
+    return [...doc.querySelectorAll("item")].map(it=>{const g=t=>{const e=it.querySelector(t);return e?e.textContent.trim():"";};
+      return {title:g("title"),link:g("link"),desc:stripHtml(g("description")),date:parseDate(g("pubDate")),src};});
+  }catch(e){return [];}
+}
+async function loadNews(force){
+  if(!force&&newsCache&&Date.now()-newsTime<120000) return newsCache;
+  const res=await Promise.all(NEWS_FEEDS.map(async f=>{const t=await fetchText(f.url);return t?parseRSS(t,f.src):[];}));
+  let items=[].concat(...res);
+  const seen=new Set(); items=items.filter(i=>i.title&&i.link&&!seen.has(i.link)&&seen.add(i.link));
+  items.sort((a,b)=>b.date-a.date); newsCache=items; newsTime=Date.now(); return items;
+}
+function heldKeywords(){
+  return FIC.positions.filter(p=>p.status==="holding").map(p=>{const v=VN100.find(x=>x.s===p.sym);const kws=[p.sym];if(p.name)kws.push(p.name);if(v&&v.n)kws.push(v.n);return {sym:p.sym,kws};});
+}
+function matchHeld(item,kw){
+  const hay=(item.title+" "+item.desc).toLowerCase(),hit=[];
+  kw.forEach(k=>{if(k.kws.some(w=>{w=w.toLowerCase();if(w.length<=4){return new RegExp("\\b"+w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b").test(hay);}return hay.includes(w);}))hit.push(k.sym);});
+  return hit;
+}
+function relTime(d){const s=(Date.now()-d.getTime())/1000;if(s<3600)return Math.max(1,Math.round(s/60))+" phút trước";if(s<86400)return Math.round(s/3600)+" giờ trước";return Math.round(s/86400)+" ngày trước";}
+function newsCard(it,tags){
+  const sc=it.src==="CafeF"?"src-cafef":"src-vietstock";
+  return `<div class="news-item"><a class="t" href="${it.link}" target="_blank" rel="noopener">${it.title}</a><div class="news-meta"><span class="src ${sc}">${it.src}</span>${tags&&tags.length?tags.map(t=>`<span class="tk">${t}</span>`).join(""):""}<span>${relTime(it.date)}</span></div>${it.desc?`<div class="news-snip">${it.desc}</div>`:""}</div>`;
+}
+async function renderNews(force){
+  const el=id=>document.getElementById(id);
+  el("newsStatus").textContent="Đang tải tin…";
+  const items=await loadNews(force);
+  if(!items||!items.length){
+    el("newsPort").innerHTML=`<div style="color:var(--gold);font-size:13px">Chưa lấy được tin (cần internet — trong artifact mạng bị chặn). Mở bản online/hosted, hoặc xem trực tiếp:</div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="https://cafef.vn/thi-truong-chung-khoan.chn" target="_blank">CafeF · Thị trường</a><a class="btn" href="https://vietstock.vn/chung-khoan.htm" target="_blank">Vietstock · Chứng khoán</a></div>`;
+    el("newsMkt").innerHTML=""; el("newsStatus").textContent="🟡 Offline / chặn mạng"; return;
+  }
+  const kw=heldKeywords(),port=[];
+  items.forEach(it=>{const tags=matchHeld(it,kw);if(tags.length)port.push({it,tags});});
+  el("newsPort").innerHTML=port.length?port.slice(0,12).map(x=>newsCard(x.it,x.tags)).join(""):'<div style="color:var(--muted);font-size:13px">Chưa có tin khớp mã trong danh mục ở các feed mới nhất — xem Thị trường chung bên dưới.</div>';
+  el("newsMkt").innerHTML=items.slice(0,18).map(it=>newsCard(it,matchHeld(it,kw))).join("");
+  el("newsStatus").textContent="🟢 "+items.length+" tin · "+new Date().toLocaleTimeString("vi-VN");
+}
+function showNews(){setView("view-news","nav-news");renderNews();}
+
+/* ===== Tìm kiếm & thêm mã VN100 ===== */
+const $=id=>document.getElementById(id);let pickSym=null;
+function initSearch(){
+  const inp=$("vnsearch"),sug=$("suggest");
+  inp.addEventListener("input",()=>{
+    const q=inp.value.trim().toUpperCase();$("addform").classList.add("hide");
+    if(!q){sug.innerHTML="";return;}
+    const owned=new Set(FIC.positions.map(p=>p.sym));
+    const res=VN100.filter(v=>v.s.includes(q)||v.n.toUpperCase().includes(q)).slice(0,8);
+    sug.innerHTML=res.length?res.map(v=>`<div class="sug" onclick="pickStock('${v.s}','${v.n.replace(/'/g,"")}','${v.sec}')"><b>${v.s}</b> <span>${v.n}</span> <i>${v.sec}</i>${owned.has(v.s)?' <em>· đã có</em>':''}</div>`).join(""):'<div class="sug mut">Không thấy mã phù hợp trong VN100</div>';
+  });
+  document.addEventListener("click",e=>{if(!$("vnsearch").closest(".searchcard").contains(e.target))sug.innerHTML="";});
+}
+async function pickStock(sym,name,sec){
+  $("suggest").innerHTML="";$("vnsearch").value=sym;pickSym={sym,name,sec};
+  const af=$("addform");af.classList.remove("hide");
+  af.innerHTML=`<div style="color:var(--muted);font-size:12.5px">Đang lấy giá ${sym}…</div>`;
+  const price=await fetchCurrentPrice(sym);
+  af.innerHTML=`<div class="afrow"><div><label>Mã</label><div class="afsym">${sym} <span style="color:var(--muted);font-weight:500;font-size:12px">${name}</span></div></div><div><label>Khối lượng (cp)</label><input id="afQty" type="number" min="100" step="100" placeholder="VD: 1000"></div><div><label>Giá vốn (đ/cp)</label><input id="afCost" type="number" step="10" value="${price||''}"></div><button class="btn-add" onclick="confirmAdd()">+ Thêm vào danh mục</button></div><div style="color:var(--muted);font-size:12px;margin-top:8px">${price?('Giá hiện tại '+fmtVnd(price)+'đ — đã điền sẵn, sửa nếu cần.'):'Chưa lấy được giá live (artifact/file chặn mạng) — nhập giá vốn thủ công; biểu đồ cần internet.'} Stop −7,5% &amp; Target +22,5% tự đặt theo IPS (R/R 1:3).</div>`;
+}
+async function confirmAdd(){
+  const qty=parseFloat(($("afQty")||{}).value),cost=parseFloat(($("afCost")||{}).value);
+  if(!qty||qty<=0)return alert("Nhập khối lượng > 0");
+  if(!cost||cost<=0)return alert("Nhập giá vốn > 0");
+  const btn=document.querySelector(".btn-add");if(btn){btn.disabled=true;btn.textContent="Đang thêm…";}
+  await addPositionBySearch(pickSym.sym,pickSym.name,pickSym.sec,qty,cost);
+  $("addform").classList.add("hide");$("vnsearch").value="";$("suggest").innerHTML="";renderDash();
+}
+function removeAndRender(sym){if(confirm("Xóa "+sym+" khỏi danh mục?")){removePosition(sym);renderDash();}}
+
+loadUserPositions();
+showDash();
+initSearch();
+setInterval(()=>{const vis=id=>!document.getElementById(id).classList.contains("hide");if(vis("view-dash"))renderDash();else if(vis("view-risk"))renderRisk();},30000);
+setInterval(()=>{if(!document.getElementById("view-news").classList.contains("hide"))renderNews(true);},300000);
+</script>
+</body>
+</html>
+<!-- FIC Live · single-file build · search VN100 + ngày chốt · end-of-file padding to flush mount sync ============================== -->
+
